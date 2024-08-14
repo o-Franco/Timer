@@ -1,15 +1,14 @@
-import { ReactNode, createContext, useReducer, useState } from "react"
+import { ReactNode, createContext, useEffect, useReducer, useState } from "react"
 import { Cycle, cyclesReducer } from '../reducers/cycles/reducer'
 import { act } from "react-dom/test-utils";
 import { ActionTypes, addNewCycleAction, interruptCurrentCycleAction, markCurrentCycleAsFinishedAction } from "../reducers/cycles/actions";
+import { parse } from "date-fns";
 
 interface CreateCycleData {
     task: string;
     minutesAmount: number;
 }
 
-
-  
 interface CyclesContextType{
     cycles: Cycle[];
     activeCycle: Cycle | undefined;
@@ -35,10 +34,22 @@ export function CyclesContextProvider({
     {
       cycles:[],
       activeCycleId: null,
+    }, () => {
+      const storedStateAsJSON = localStorage.getItem('@ignite-timer:cycles-state-1.0.0');
+
+      if (storedStateAsJSON){
+        return JSON.parse(storedStateAsJSON)
+      }
     })
 
-
     const [amountSecondsPassed, setAmountSecondsPassed] = useState(0)
+
+    useEffect(() => {
+      const stateJSON = JSON.stringify(cyclesState)
+
+      localStorage.setItem('@ignite-timer:cycles-state-1.0.0', stateJSON)
+    },[cyclesState])
+
     const {cycles, activeCycleId} = cyclesState;
     const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
 
@@ -67,7 +78,7 @@ export function CyclesContextProvider({
       }
     
       function interruptCurrentCycle(){
-        dispatch(interruptCurrentCycleAction)
+        dispatch(interruptCurrentCycleAction())
       }
       
 
